@@ -5,37 +5,46 @@ import java.util.*;
 public class BotBattleController {
     
         private static List<Bot> all_bots = new ArrayList();
+        private static List<Class> all_classes = new ArrayList();
         
-	public static void main(String[] args){
+	public static void main(String[] args) throws InstantiationException, IllegalAccessException {
 		/*edit and uncomment these lines as needed*/
-		(new SimplePathfinder()).register(all_bots);
-		(new Frozen()).register(all_bots);
-		(new CocoonBot()).register(all_bots);
-		(new ProtectiveBot()).register(all_bots);
-		(new Albert()).register(all_bots);
-		(new MineThenBoom()).register(all_bots);
-		(new PatientBot()).register(all_bots);
+                all_classes.add(Wanderlust.class);
+                all_classes.add(Frozen.class);
+                all_classes.add(CocoonBot.class);
+                all_classes.add(ProtectiveBot.class);
+                all_classes.add(Albert.class);
+                all_classes.add(MineThenBoom.class);
+                all_classes.add(PatientBot.class);
                 
-                ArrayList<List<Bot>> all_combos = new ArrayList();
-                all_combos.addAll(combinations(all_bots, 2));
-                all_combos.addAll(combinations(all_bots, 3));
-                all_combos.addAll(combinations(all_bots, 4));
+                int botSize = all_classes.size();
+                
+                ArrayList<List<Class>> all_combos = new ArrayList();
+                all_combos.addAll(combinations(all_classes, 2));
+                all_combos.addAll(combinations(all_classes, 3));
+                all_combos.addAll(combinations(all_classes, 4));
                 
                 System.out.println(all_combos);
                 
                 
-                int all_wins[] = new int[all_bots.size()];
-                int all_ties[] = new int[all_bots.size()];
-                int all_losses[] = new int[all_bots.size()];
+                int all_wins[] = new int[botSize];
+                int all_ties[] = new int[botSize];
+                int all_losses[] = new int[botSize];
+                String names[] = new String[botSize];
                 int runs = 100;
                 
-                for (List<Bot> combo : all_combos) {
-                    int wins[] = new int[all_bots.size()];
-                    int ties[] = new int[all_bots.size()];
-                    int losses[] = new int[all_bots.size()];
+                for (List<Class> combo : all_combos) {
+                    int wins[] = new int[botSize];
+                    int ties[] = new int[botSize];
+                    int losses[] = new int[botSize];
                     System.out.println("Score for "+combo+":");
                     for (int i = 0; i < runs; i++) {
-                        List<Bot> players = new ArrayList(combo);
+                        List<Bot> players = new ArrayList();
+                        for (Class c : combo) {
+                            Bot b = (Bot)c.newInstance();
+                            b.register(players);
+                            names[all_classes.indexOf(c)] = b.toString();
+                        }
                         List<Bot> winners = runGame(players, false);
                         if (winners.size() == 1) {
                             wins[winners.get(0).id()-1]++;
@@ -49,11 +58,11 @@ public class BotBattleController {
                             losses[b.id()-1]++;
                         }
                     }
-                    for (Bot b : combo) {
-                        int i = b.id()-1;
+                    for (Class c : combo) {
+                        int i = all_classes.indexOf(c);
                         int totalRounds = wins[i] + ties[i] + losses[i];
                         int points = (int)(1000 * Math.max(0, wins[i] + ties[i]/3.0 - losses[i]/8.0) / totalRounds);
-                        System.out.println(b+": "+wins[i]+" wins, "+ties[i]+" ties, "+losses[i]+" losses; Score = "+points);
+                        System.out.println(names[i]+": "+wins[i]+" wins, "+ties[i]+" ties, "+losses[i]+" losses; Score = "+points);
                         all_wins[i] += wins[i];
                         all_ties[i] += ties[i];
                         all_losses[i] += losses[i];
@@ -62,8 +71,8 @@ public class BotBattleController {
                 }
                 
                 System.out.println("Final Score:");
-                for (Bot b : all_bots) {
-                    int i = b.id()-1;
+                for (int i = 0; i < botSize; i++) {
+                    Bot b = all_bots.get(i);
                     int totalRounds = all_wins[i] + all_ties[i] + all_losses[i];
                     int points = (int)(1000 * Math.max(0, all_wins[i] + all_ties[i]/3.0 - all_losses[i]/8.0) / totalRounds);
                     System.out.println(b+": "+all_wins[i]+" wins, "+all_ties[i]+" ties, "+all_losses[i]+" losses; Score = "+points);
@@ -118,7 +127,7 @@ public class BotBattleController {
 					break ;
 				}
 				if(s==Bot.Action.MINE){
-					s=(new Bot.Action[]{Bot.Action.DOWN,Bot.Action.LEFT,Bot.Action.RIGHT,Bot.Action.UP})[r.nextInt(2)];
+					s=(new Bot.Action[]{Bot.Action.DOWN,Bot.Action.LEFT,Bot.Action.RIGHT,Bot.Action.UP})[r.nextInt(4)];
 					map[x][y]=-1;
 				}
 				if(s==Bot.Action.LEFT){
